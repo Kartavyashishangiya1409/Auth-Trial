@@ -16,7 +16,11 @@ const app = express();
 app.use(express.json());
 app.use(
   cors({
-    origin: ["http://localhost:8081", "https://ks-auth-trial.vercel.app"],
+    origin: [
+      "http://localhost:8081",
+      "https://ks-auth-trial.vercel.app",
+      "https://*.vercel.app"
+    ],
     credentials: true,
   })
 );
@@ -207,4 +211,4 @@ const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-});
+}); 
