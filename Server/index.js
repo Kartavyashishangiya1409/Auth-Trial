@@ -19,15 +19,16 @@ app.use(
     origin: [
       "http://localhost:8081",
       "https://ks-auth-trial.vercel.app",
-      "https://*.vercel.app"
+      "https://*.vercel.app",
     ],
     credentials: true,
-  })
+  }),
 );
 
 /* ================== MONGODB CONNECTION ================== */
 
-mongoose.connect(process.env.MONGO_URI) // process.env.MONGO_URI
+mongoose
+  .connect(process.env.MONGO_URI) // process.env.MONGO_URI
   .then(() => console.log("MongoDB Connected"))
   .catch((err) => console.log(err));
 
@@ -75,8 +76,7 @@ app.post("/api/login", async (req, res) => {
     const { email, password } = req.body;
 
     const user = await User.findOne({ email });
-    if (!user)
-      return res.status(400).json({ message: "User not found" });
+    if (!user) return res.status(400).json({ message: "User not found" });
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch)
@@ -127,7 +127,6 @@ app.post("/api/google-login", async (req, res) => {
       email: user.email,
       token: generateToken(user._id),
     });
-
   } catch (error) {
     res.status(500).json({ error: "Google login failed" });
   }
@@ -151,7 +150,9 @@ app.post("/api/forgot-password", async (req, res) => {
     await user.save();
 
     const transporter = nodemailer.createTransport({
-      service: "gmail",
+      host: "smtp.gmail.com",
+      port: 587,
+      secure: false,
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
@@ -165,7 +166,6 @@ app.post("/api/forgot-password", async (req, res) => {
     });
 
     res.json({ message: "OTP sent to email" });
-
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Email sending failed" });
@@ -221,15 +221,9 @@ app.post("/api/reset-password", async (req, res) => {
     return res.status(400).json({ message: "Invalid request" });
   }
 
-  const hashedOtp = crypto
-    .createHash("sha256")
-    .update(otp)
-    .digest("hex");
+  const hashedOtp = crypto.createHash("sha256").update(otp).digest("hex");
 
-  if (
-    user.resetOtp !== hashedOtp ||
-    user.resetOtpExpire < Date.now()
-  ) {
+  if (user.resetOtp !== hashedOtp || user.resetOtpExpire < Date.now()) {
     return res.status(400).json({ message: "Invalid or expired OTP" });
   }
 
@@ -250,4 +244,4 @@ const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-}); 
+});
