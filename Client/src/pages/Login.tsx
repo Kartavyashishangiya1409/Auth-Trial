@@ -106,7 +106,7 @@ const Login = () => {
         <CardContent className="space-y-4">
           
           {/* GOOGLE LOGIN */}
-          <GoogleLogin
+          <GoogleLogin width="100%"
             onSuccess={handleGoogleSuccess}
             onError={() => toast.error("Google Login Failed")}
           />

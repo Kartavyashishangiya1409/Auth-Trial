@@ -71,7 +71,7 @@ const Signup = () => {
         </CardHeader>
 
         <CardContent className="space-y-4">
-          <GoogleLogin text="signup_with"
+          <GoogleLogin width="100%" text="signup_with"
             onSuccess={async (credentialResponse) => {
               if (!credentialResponse.credential) {
                 toast.error("Google signup failed");
