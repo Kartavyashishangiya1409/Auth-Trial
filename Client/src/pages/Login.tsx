@@ -31,7 +31,7 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:5000/api/login", {
+      const res = await fetch("https://auth-trial-server.onrender.com/api/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -66,7 +66,7 @@ const Login = () => {
     }
 
     try {
-      const res = await fetch("http://localhost:5000/api/google-login", {
+      const res = await fetch("https://auth-trial-server.onrender.com/api/google-login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
