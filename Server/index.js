@@ -134,45 +134,84 @@ app.post("/api/google-login", async (req, res) => {
 });
 
 app.post("/api/forgot-password", async (req, res) => {
-  const { email } = req.body;
+  try {
+    const { email } = req.body;
 
-  const user = await User.findOne({ email });
-  if (!user) {
-    return res.status(404).json({ message: "User not found" });
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    const hashedOtp = crypto.createHash("sha256").update(otp).digest("hex");
+
+    user.resetOtp = hashedOtp;
+    user.resetOtpExpire = Date.now() + 10 * 60 * 1000;
+    await user.save();
+
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    await transporter.sendMail({
+      to: user.email,
+      subject: "Password Reset OTP",
+      html: `<h3>Your OTP is:</h3><h2>${otp}</h2>`,
+    });
+
+    res.json({ message: "OTP sent to email" });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Email sending failed" });
   }
-
-  // Generate 6-digit OTP
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-  const hashedOtp = crypto
-    .createHash("sha256")
-    .update(otp)
-    .digest("hex");
-
-  user.resetOtp = hashedOtp;
-  user.resetOtpExpire = Date.now() + 10 * 60 * 1000; // 10 minutes
-  await user.save();
-
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
-
-  await transporter.sendMail({
-    to: user.email,
-    subject: "Password Reset OTP",
-    html: `
-      <h3>Your OTP is:</h3>
-      <h2>${otp}</h2>
-      <p>This OTP expires in 10 minutes.</p>
-    `,
-  });
-
-  res.json({ message: "OTP sent to email" });
 });
+
+// app.post("/api/forgot-password", async (req, res) => {
+//   const { email } = req.body;
+
+//   const user = await User.findOne({ email });
+//   if (!user) {
+//     return res.status(404).json({ message: "User not found" });
+//   }
+
+//   // Generate 6-digit OTP
+//   const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+//   const hashedOtp = crypto
+//     .createHash("sha256")
+//     .update(otp)
+//     .digest("hex");
+
+//   user.resetOtp = hashedOtp;
+//   user.resetOtpExpire = Date.now() + 10 * 60 * 1000; // 10 minutes
+//   await user.save();
+
+//   const transporter = nodemailer.createTransport({
+//     service: "gmail",
+//     auth: {
+//       user: process.env.EMAIL_USER,
+//       pass: process.env.EMAIL_PASS,
+//     },
+//   });
+
+//   await transporter.sendMail({
+//     to: user.email,
+//     subject: "Password Reset OTP",
+//     html: `
+//       <h3>Your OTP is:</h3>
+//       <h2>${otp}</h2>
+//       <p>This OTP expires in 10 minutes.</p>
+//     `,
+//   });
+
+//   res.json({ message: "OTP sent to email" });
+// });
 
 app.post("/api/reset-password", async (req, res) => {
   const { email, otp, newPassword } = req.body;
